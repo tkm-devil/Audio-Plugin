@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="jSNwDv" name="Audio-Plugin" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20">
   <MAINGROUP id="xSWafm" name="Audio-Plugin">
     <GROUP id="{DC506F21-3CBE-639E-8136-500B559F5C5C}" name="Source">
       <FILE id="JAsFGQ" name="PluginProcessor.cpp" compile="1" resource="0"
@@ -32,8 +32,8 @@
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="Audio-Plugin"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="Audio-Plugin"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Audio-Plugin" extraCompilerFlags="/std:c++20"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Audio-Plugin" extraCompilerFlags="/std:c++20"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="external/JUCE/modules"/>
