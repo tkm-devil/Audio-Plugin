@@ -1,0 +1,32 @@
+# JUCE build artifacts
+Builds/
+JuceLibraryCode/
+
+# IDE and compiler artifacts
+*.vs/
+*.vscode/
+*.xcworkspace/
+*.xcodeproj/
+*.sln
+*.user
+*.suo
+*.obj
+*.pdb
+*.exe
+*.dll
+*.app
+*.dSYM/
+
+# Backup and temporary files
+*.log
+*.tmp
+*.cache
+*.DS_Store
+Thumbs.db
+
+# CMake (optional)
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
