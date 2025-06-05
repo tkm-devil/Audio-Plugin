@@ -53,19 +53,59 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    // Enumeration for DSP options
     enum class DSP_OPTION
     {
-      Phase,
-      Chorus,
-      Overdrive,
-      LadderFilter,
-      END_OF_LIST
+        Phase = 0,
+        Chorus,
+        Overdrive,
+        LadderFilter,
+        END_OF_LIST
     };
 
+    using DSP_ORDER = std::array<DSP_OPTION, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
+    using DSP_POINTERS = std::array<juce::dsp::ProcessorBase*, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
+
 private:
-    juce::dsp::Phaser<float> phaser;
-    juce::dsp::Chorus<float> chorus;
-    juce::dsp::LadderFilter<float> overdrive, ladderFilter;
+
+    // DSP chain configuration
+    DSP_ORDER dspOrder;
+    DSP_POINTERS dspInstances;
+
+    // Template wrapper for DSP modules
+    template <typename T>
+    struct DSP_CHOICE : juce::dsp::ProcessorBase
+    {
+        void prepare(const juce::dsp::ProcessSpec& spec) override 
+        { 
+            dsp.prepare(spec); 
+        }
+        
+        void process(const juce::dsp::ProcessContextReplacing<float>& context) override 
+        { 
+            dsp.process(context); 
+        }
+        
+        void reset() override 
+        { 
+            dsp.reset(); 
+        }
+
+        T dsp;
+    };
+
+    // DSP module instances
+    DSP_CHOICE<juce::dsp::Phaser<float>> phaser;
+    DSP_CHOICE<juce::dsp::Chorus<float>> chorus;
+    DSP_CHOICE<juce::dsp::LadderFilter<float>> overdrive;
+    DSP_CHOICE<juce::dsp::LadderFilter<float>> ladderFilter;
+
+    // Processing utilities
+    juce::dsp::ProcessSpec spec;
+    
+    // Configuration method
+    void configureDSPModules();
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };
