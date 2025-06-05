@@ -20,12 +20,20 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
-      )
+      ),
+      apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
     // Initialize DSP order and map instances
     dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::Overdrive, DSP_OPTION::LadderFilter, DSP_OPTION::Delay};
     dspInstances = {&phaser, &chorus, &overdrive, &ladderFilter, &delay};
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    return layout;
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -195,6 +203,13 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     // Clear any output channels that didn't contain input data
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
+
+    // Check if a new DSP order is available
+    DSP_ORDER newOrder;
+    if (dspOrderFifo.pull(newOrder))
+    {
+        dspOrder = newOrder; // Replace the current DSP order
+    }
 
     // Create audio block and processing context (create them locally)
     auto audioBlock = juce::dsp::AudioBlock<float>(buffer);

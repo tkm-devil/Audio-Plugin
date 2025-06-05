@@ -65,6 +65,9 @@ public:
         END_OF_LIST
     };
 
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState apvts;
+
     using DSP_ORDER = std::array<DSP_OPTION, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
     using DSP_POINTERS = std::array<juce::dsp::ProcessorBase*, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
 
