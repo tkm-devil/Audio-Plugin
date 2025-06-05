@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <Fifo.h>
 
 //==============================================================================
 /**
@@ -60,11 +61,14 @@ public:
         Chorus,
         Overdrive,
         LadderFilter,
+        Delay,
         END_OF_LIST
     };
 
     using DSP_ORDER = std::array<DSP_OPTION, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
     using DSP_POINTERS = std::array<juce::dsp::ProcessorBase*, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
+
+    SimpleMBComp::Fifo<DSP_ORDER> dspOrderFifo;
 
 private:
 
@@ -99,6 +103,7 @@ private:
     DSP_CHOICE<juce::dsp::Chorus<float>> chorus;
     DSP_CHOICE<juce::dsp::LadderFilter<float>> overdrive;
     DSP_CHOICE<juce::dsp::LadderFilter<float>> ladderFilter;
+    DSP_CHOICE<juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear>> delay;
 
     // Processing utilities
     juce::dsp::ProcessSpec spec;

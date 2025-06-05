@@ -24,8 +24,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
 {
     // Initialize DSP order and map instances
-    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::Overdrive, DSP_OPTION::LadderFilter};
-    dspInstances = {&phaser, &chorus, &overdrive, &ladderFilter};
+    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::Overdrive, DSP_OPTION::LadderFilter, DSP_OPTION::Delay};
+    dspInstances = {&phaser, &chorus, &overdrive, &ladderFilter, &delay};
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -153,6 +153,10 @@ void AudioPluginAudioProcessor::configureDSPModules()
     ladderFilter.dsp.setCutoffFrequencyHz(1000.0f);
     ladderFilter.dsp.setResonance(0.5f);
     ladderFilter.dsp.setDrive(1.0f);
+
+    // Configure Delay
+    delay.dsp.setMaximumDelayInSamples(static_cast<int>(spec.sampleRate * 2.0)); // 2 seconds max
+    delay.dsp.setDelay(static_cast<float>(spec.sampleRate * 0.25f)); // 250ms delay
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations

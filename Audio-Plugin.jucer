@@ -4,6 +4,9 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20">
   <MAINGROUP id="xSWafm" name="Audio-Plugin">
     <GROUP id="{DC506F21-3CBE-639E-8136-500B559F5C5C}" name="Source">
+      <GROUP id="{846B54F1-03FB-B939-CE63-25D5EBF81649}" name="DSP">
+        <FILE id="JN1lau" name="Fifo.h" compile="0" resource="0" file="external/SimpleMultiBandComp/Source/DSP/Fifo.h"/>
+      </GROUP>
       <FILE id="JAsFGQ" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="CzRKv1" name="PluginProcessor.h" compile="0" resource="0"
@@ -33,7 +36,8 @@
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="Audio-Plugin" extraCompilerFlags="/std:c++20"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Audio-Plugin" extraCompilerFlags="/std:c++20"
+                       headerPath="..\..\external\SimpleMultiBandComp\Source\&#10;..\..\external\SimpleMultiBandComp\Source\GUI&#10;..\..\external\SimpleMultiBandComp\Source\DSP"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="Audio-Plugin" extraCompilerFlags="/std:c++20"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
