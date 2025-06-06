@@ -100,6 +100,16 @@ public:
     };
     OverdriveParams overdriveParams;
 
+    // Parameters for Ladder Filter
+    struct LadderFilterParams {
+        std::atomic<float>* cutoffHz = nullptr;
+        std::atomic<float>* resonance = nullptr;
+        std::atomic<float>* drive = nullptr;
+        std::atomic<int>* mode = nullptr; // Mode is enum-backed, so int works
+    };
+
+    LadderFilterParams ladderFilterParams;
+
 private:
 
     // DSP chain configuration

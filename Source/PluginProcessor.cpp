@@ -9,23 +9,30 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <JucePluginDefines.h>
+#include <juce_dsp/juce_dsp.h>
 
 // getters for Phaser parameters
-auto getPhaserRateName() { return juce::String("Phaser RateHz"); }
+auto getPhaserRateName() { return juce::String("Phaser Rate Hz"); }
 auto getPhaserDepthName() { return juce::String("Phaser Depth %"); }
-auto getPhaserCentreFreqName() { return juce::String("Phaser CentreFreqHz"); }
+auto getPhaserCentreFreqName() { return juce::String("Phaser CentreFreq Hz"); }
 auto getPhaserFeedbackName() { return juce::String("Phaser Feedback %"); }
 auto getPhaserMixName() { return juce::String("Phaser Mix %"); }
 
 // getters for Chorus parameters
 auto getChorusRateName() { return juce::String("Chorus RateHz"); }
 auto getChorusDepthName() { return juce::String("Chorus Depth %"); }
-auto getChorusCentreDelayName() { return juce::String("Chorus CentreDelayMs"); }
+auto getChorusCentreDelayName() { return juce::String("Chorus CentreDelay Ms"); }
 auto getChorusFeedbackName() { return juce::String("Chorus Feedback %"); }
 auto getChorusMixName() { return juce::String("Chorus Mix %"); }
 
 // getters for Overdrive parameters
 auto getOverdriveSaturationName() { return juce::String("Overdrive Saturation"); }
+
+// getters for Ladder Filter parameters
+auto getLadderFilterCutoffName() { return juce::String("Ladder Filter Cutoff Hz"); }
+auto getLadderFilterResonanceName() { return juce::String("Ladder Filter Resonance"); }
+auto getLadderFilterDriveName() { return juce::String("Ladder Filter Drive"); }
+auto getLadderFilterModeName() { return juce::String("Ladder Filter Mode"); }
 
 
 //==============================================================================
@@ -67,6 +74,14 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     // Set up Overdrive parameters
     overdriveParams.overdriveSaturation = apvts.getRawParameterValue(getOverdriveSaturationName());
     jassert(overdriveParams.overdriveSaturation);
+
+    // Set up Ladder Filter parameters
+    ladderFilterParams.cutoffHz = apvts.getRawParameterValue(getLadderFilterCutoffName());
+    ladderFilterParams.resonance = apvts.getRawParameterValue(getLadderFilterResonanceName());
+    ladderFilterParams.drive = apvts.getRawParameterValue(getLadderFilterDriveName());
+    ladderFilterParams.mode = reinterpret_cast<std::atomic<int>*>(apvts.getRawParameterValue(getLadderFilterModeName()));
+    jassert(ladderFilterParams.cutoffHz && ladderFilterParams.resonance &&
+            ladderFilterParams.drive && ladderFilterParams.mode);
 
 }
 
@@ -325,6 +340,41 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::NormalisableRange<float>(1.f, 100.0f, 0.1f, 1.f),
         1.f,
         ""));
+
+
+    // Add parameters for Ladder Filter
+    // Ladder Filter Cutoff
+    auto ladderFilterCutoffName = getLadderFilterCutoffName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(ladderFilterCutoffName, versionHint),
+        ladderFilterCutoffName,
+        juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
+        1000.f,
+        "Hz"));
+    // Ladder Filter Resonance
+    auto ladderFilterResonanceName = getLadderFilterResonanceName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(ladderFilterResonanceName, versionHint),
+        ladderFilterResonanceName,
+        juce::NormalisableRange<float>(0.1f, 10.f, 0.01f, 1.f),
+        0.5f,
+        ""));
+    // Ladder Filter Drive
+    auto ladderFilterDriveName = getLadderFilterDriveName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(ladderFilterDriveName, versionHint),
+        ladderFilterDriveName,
+        juce::NormalisableRange<float>(0.1f, 10.f, 0.01f, 1.f),
+        1.f,
+        ""));
+    // Ladder Filter Mode
+    auto ladderFilterModeName = getLadderFilterModeName();
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID(ladderFilterModeName, versionHint),
+        ladderFilterModeName,
+        juce::StringArray{"LPF12", "HPF12", "BPF12", "LPF24", "HPF24", "BPF24"},
+        0)); // Default to LPF12
+
 
     return layout;
 }
