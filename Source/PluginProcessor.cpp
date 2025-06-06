@@ -10,6 +10,12 @@
 #include "PluginEditor.h"
 #include <JucePluginDefines.h>
 
+auto getPhaserRateName() { return juce::String("Phaser RateHz"); }
+auto getPhaserDepthName() { return juce::String("Phaser Depth %"); }
+auto getPhaserCentreFreqName() { return juce::String("Phaser CentreFreqHz"); }
+auto getPhaserFeedbackName() { return juce::String("Phaser Feedback %"); }
+auto getPhaserMixName() { return juce::String("Phaser Mix %"); }
+
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -20,20 +26,24 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
-      ),
+                         ),
       apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
     // Initialize DSP order and map instances
     dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::Overdrive, DSP_OPTION::LadderFilter, DSP_OPTION::Delay};
     dspInstances = {&phaser, &chorus, &overdrive, &ladderFilter, &delay};
-}
 
-juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::createParameterLayout()
-{
-    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    // Set up Phaser parameters
+    phaserParams.rateHz       = apvts.getRawParameterValue(getPhaserRateName());
+    phaserParams.depthPercent = apvts.getRawParameterValue(getPhaserDepthName());
+    phaserParams.centerFreqHz = apvts.getRawParameterValue(getPhaserCentreFreqName());
+    phaserParams.feedbackPercent = apvts.getRawParameterValue(getPhaserFeedbackName());
+    phaserParams.mixPercent   = apvts.getRawParameterValue(getPhaserMixName());
 
-    return layout;
+    jassert(phaserParams.rateHz && phaserParams.depthPercent && phaserParams.centerFreqHz &&
+            phaserParams.feedbackPercent && phaserParams.mixPercent);
+
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -164,7 +174,7 @@ void AudioPluginAudioProcessor::configureDSPModules()
 
     // Configure Delay
     delay.dsp.setMaximumDelayInSamples(static_cast<int>(spec.sampleRate * 2.0)); // 2 seconds max
-    delay.dsp.setDelay(static_cast<float>(spec.sampleRate * 0.25f)); // 250ms delay
+    delay.dsp.setDelay(static_cast<float>(spec.sampleRate * 0.25f));             // 250ms delay
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -191,6 +201,60 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout &layout
 #endif
 }
 #endif
+
+juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    // Add parameters for Phaser
+    const int versionHint = 1;
+    // Phaser Rate
+    auto rateName = getPhaserRateName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(rateName, versionHint),
+        rateName,
+        juce::NormalisableRange<float>(0.1f, 2.f, 0.01f, 1.0f),
+        0.2f,
+        "Hz"));
+
+    // Phaser Depth
+    auto depthName = getPhaserDepthName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(depthName, versionHint),
+        depthName,
+        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
+        0.05f,
+        "%"));
+
+    // Phaser Centre Frequency
+    auto freqName = getPhaserCentreFreqName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(freqName, versionHint),
+        freqName,
+        juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
+        1000.f,
+        "Hz"));
+
+    // Phaser Feedback
+    auto feedbackName = getPhaserFeedbackName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(feedbackName, versionHint),
+        feedbackName,
+        juce::NormalisableRange<float>(-1.0f, 1.0f, 0.01f, 1.f),
+        0.0f,
+        "%"));
+
+    // Phaser Mix
+    auto mixName = getPhaserMixName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(mixName, versionHint),
+        mixName,
+        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
+        0.05f,
+        "%"));
+
+    return layout;
+}
 
 void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages)
 {

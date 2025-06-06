@@ -73,6 +73,16 @@ public:
 
     SimpleMBComp::Fifo<DSP_ORDER> dspOrderFifo;
 
+    struct PhaserParams {
+        std::atomic<float>* rateHz = nullptr;
+        std::atomic<float>* depthPercent = nullptr;
+        std::atomic<float>* centerFreqHz = nullptr;
+        std::atomic<float>* feedbackPercent = nullptr;
+        std::atomic<float>* mixPercent = nullptr;
+    };
+
+    PhaserParams phaserParams;
+
 private:
 
     // DSP chain configuration
