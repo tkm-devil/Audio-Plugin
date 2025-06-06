@@ -34,6 +34,15 @@ auto getLadderFilterResonanceName() { return juce::String("Ladder Filter Resonan
 auto getLadderFilterDriveName() { return juce::String("Ladder Filter Drive"); }
 auto getLadderFilterModeName() { return juce::String("Ladder Filter Mode"); }
 
+// getters for General Filter parameters
+auto getGeneralFilterChoices(){
+    return juce::StringArray{"Peak", "Low Pass", "High Pass", "Band Pass", "Notch", "All Pass"};
+}
+auto getGeneralFilterModeName() { return juce::String("General Filter Mode"); }
+auto getGeneralFilterFreqName() { return juce::String("General Filter Frequency Hz"); }
+auto getGeneralFilterQualityName() { return juce::String("General Filter Quality"); }
+auto getGeneralFilterGainName() { return juce::String("General Filter Gain dB"); }
+
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -50,8 +59,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
 {
     // Initialize DSP order and map instances
-    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::Overdrive, DSP_OPTION::LadderFilter, DSP_OPTION::Delay};
-    dspInstances = {&phaser, &chorus, &overdrive, &ladderFilter, &delay};
+    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::Overdrive, DSP_OPTION::LadderFilter, 
+                DSP_OPTION::GeneralFilter};
+    dspInstances = {&phaser, &chorus, &overdrive, &ladderFilter, &generalFilter};
 
     // Set up Phaser parameters
     phaserParams.rateHz       = apvts.getRawParameterValue(getPhaserRateName());
@@ -82,6 +92,14 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     ladderFilterParams.mode = reinterpret_cast<std::atomic<int>*>(apvts.getRawParameterValue(getLadderFilterModeName()));
     jassert(ladderFilterParams.cutoffHz && ladderFilterParams.resonance &&
             ladderFilterParams.drive && ladderFilterParams.mode);
+
+    // Set up General Filter parameters
+    generalFilterParams.mode = reinterpret_cast<std::atomic<int>*>(apvts.getRawParameterValue(getGeneralFilterModeName()));
+    generalFilterParams.freqHz = apvts.getRawParameterValue(getGeneralFilterFreqName());
+    generalFilterParams.quality = apvts.getRawParameterValue(getGeneralFilterQualityName());
+    generalFilterParams.gainDb = apvts.getRawParameterValue(getGeneralFilterGainName());
+    jassert(generalFilterParams.mode && generalFilterParams.freqHz &&
+            generalFilterParams.quality && generalFilterParams.gainDb);
 
 }
 
@@ -185,35 +203,7 @@ void AudioPluginAudioProcessor::releaseResources()
 
 void AudioPluginAudioProcessor::configureDSPModules()
 {
-    // Configure Phaser
-    phaser.dsp.setRate(1.0f);
-    phaser.dsp.setDepth(1.0f);
-    phaser.dsp.setCentreFrequency(1300.0f);
-    phaser.dsp.setFeedback(0.7f);
-    phaser.dsp.setMix(0.5f);
-
-    // Configure Chorus
-    chorus.dsp.setRate(1.5f);
-    chorus.dsp.setDepth(0.25f);
-    chorus.dsp.setCentreDelay(7.0f);
-    chorus.dsp.setFeedback(0.0f);
-    chorus.dsp.setMix(0.5f);
-
-    // Configure Overdrive (using LadderFilter as distortion)
-    overdrive.dsp.setMode(juce::dsp::LadderFilterMode::LPF24);
-    overdrive.dsp.setCutoffFrequencyHz(2000.0f);
-    overdrive.dsp.setResonance(0.7f);
-    overdrive.dsp.setDrive(5.0f);
-
-    // Configure LadderFilter
-    ladderFilter.dsp.setMode(juce::dsp::LadderFilterMode::LPF24);
-    ladderFilter.dsp.setCutoffFrequencyHz(1000.0f);
-    ladderFilter.dsp.setResonance(0.5f);
-    ladderFilter.dsp.setDrive(1.0f);
-
-    // Configure Delay
-    delay.dsp.setMaximumDelayInSamples(static_cast<int>(spec.sampleRate * 2.0)); // 2 seconds max
-    delay.dsp.setDelay(static_cast<float>(spec.sampleRate * 0.25f));             // 250ms delay
+    
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -374,6 +364,40 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         ladderFilterModeName,
         juce::StringArray{"LPF12", "HPF12", "BPF12", "LPF24", "HPF24", "BPF24"},
         0)); // Default to LPF12
+
+
+    // General Filter: https://docs.juce.com/develop/structdsp_1_1IIR_1_1Coefficients.html
+    // Add parameters for General Filter
+    auto generalFilterModeName = getGeneralFilterModeName();
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID(generalFilterModeName, versionHint),
+        generalFilterModeName,
+        getGeneralFilterChoices(),
+        0)); // Default to Peak
+
+    auto generalFilterFreqName = getGeneralFilterFreqName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(generalFilterFreqName, versionHint),
+        generalFilterFreqName,
+        juce::NormalisableRange<float>(20.f, 20000.f, 0.1f, 1.f),
+        1000.f,
+        "Hz"));
+
+    auto generalFilterQualityName = getGeneralFilterQualityName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(generalFilterQualityName, versionHint),
+        generalFilterQualityName,
+        juce::NormalisableRange<float>(0.1f, 10.f, 0.01f, 1.f),
+        1.f,
+        ""));
+
+    auto generalFilterGainName = getGeneralFilterGainName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(generalFilterGainName, versionHint),
+        generalFilterGainName,
+        juce::NormalisableRange<float>(-24.f, 24.f, 0.1f, 1.f),
+        0.f,
+        "dB"));
 
 
     return layout;

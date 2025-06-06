@@ -57,11 +57,11 @@ public:
     // Enumeration for DSP options
     enum class DSP_OPTION
     {
-        Phase = 0,
+        Phase,
         Chorus,
         Overdrive,
         LadderFilter,
-        Delay,
+        GeneralFilter,
         END_OF_LIST
     };
 
@@ -110,6 +110,15 @@ public:
 
     LadderFilterParams ladderFilterParams;
 
+    // Parameters for General Filter
+    struct GeneralFilterParams {
+        std::atomic<int>* mode = nullptr; // Mode is enum-backed, so int works
+        std::atomic<float>* freqHz = nullptr;
+        std::atomic<float>* quality = nullptr;
+        std::atomic<float>* gainDb = nullptr;
+    };
+    GeneralFilterParams generalFilterParams;
+
 private:
 
     // DSP chain configuration
@@ -143,7 +152,7 @@ private:
     DSP_CHOICE<juce::dsp::Chorus<float>> chorus;
     DSP_CHOICE<juce::dsp::LadderFilter<float>> overdrive;
     DSP_CHOICE<juce::dsp::LadderFilter<float>> ladderFilter;
-    DSP_CHOICE<juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear>> delay;
+    DSP_CHOICE<juce::dsp::IIR::Filter<float>> generalFilter;
 
     // Processing utilities
     juce::dsp::ProcessSpec spec;
