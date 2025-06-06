@@ -348,23 +348,23 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(ladderFilterCutoffName, versionHint),
         ladderFilterCutoffName,
-        juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
-        1000.f,
+        juce::NormalisableRange<float>(20.f, 20000.f, 0.1f, 1.f),
+        20000.f,
         "Hz"));
     // Ladder Filter Resonance
     auto ladderFilterResonanceName = getLadderFilterResonanceName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(ladderFilterResonanceName, versionHint),
         ladderFilterResonanceName,
-        juce::NormalisableRange<float>(0.1f, 10.f, 0.01f, 1.f),
-        0.5f,
+        juce::NormalisableRange<float>(0.f, 1.f, 0.01f, 1.f),
+        0.f,
         ""));
     // Ladder Filter Drive
     auto ladderFilterDriveName = getLadderFilterDriveName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(ladderFilterDriveName, versionHint),
         ladderFilterDriveName,
-        juce::NormalisableRange<float>(0.1f, 10.f, 0.01f, 1.f),
+        juce::NormalisableRange<float>(1.f, 100.f, 0.1f, 1.f),
         1.f,
         ""));
     // Ladder Filter Mode
