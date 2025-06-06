@@ -94,6 +94,12 @@ public:
     };
     ChorusParams chorusParams;
 
+    // Parameters for Overdrive
+    struct OverdriveParams{
+        std::atomic<float>* overdriveSaturation = nullptr;
+    };
+    OverdriveParams overdriveParams;
+
 private:
 
     // DSP chain configuration

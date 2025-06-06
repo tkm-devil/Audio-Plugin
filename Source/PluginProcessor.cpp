@@ -24,6 +24,9 @@ auto getChorusCentreDelayName() { return juce::String("Chorus CentreDelayMs"); }
 auto getChorusFeedbackName() { return juce::String("Chorus Feedback %"); }
 auto getChorusMixName() { return juce::String("Chorus Mix %"); }
 
+// getters for Overdrive parameters
+auto getOverdriveSaturationName() { return juce::String("Overdrive Saturation"); }
+
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -60,6 +63,10 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     chorusParams.mixPercent   = apvts.getRawParameterValue(getChorusMixName());
     jassert(chorusParams.rateHz && chorusParams.depthPercent && chorusParams.centerDelayMs &&
             chorusParams.feedbackPercent && chorusParams.mixPercent);
+
+    // Set up Overdrive parameters
+    overdriveParams.overdriveSaturation = apvts.getRawParameterValue(getOverdriveSaturationName());
+    jassert(overdriveParams.overdriveSaturation);
 
 }
 
@@ -282,7 +289,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::ParameterID(chorusDepthName, versionHint),
         chorusDepthName,
         juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
-        0.25f,
+        0.05f,
         "%"));
     // Chorus Centre Delay
     auto chorusCentreDelayName = getChorusCentreDelayName();
@@ -306,9 +313,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::ParameterID(chorusMixName, versionHint),
         chorusMixName,
         juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
-        0.5f,
+        0.05f,
         "%"));
 
+
+    // Add parameters for Overdrive
+    auto overdriveSaturationName = getOverdriveSaturationName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(overdriveSaturationName, versionHint),
+        overdriveSaturationName,
+        juce::NormalisableRange<float>(1.f, 100.0f, 0.1f, 1.f),
+        1.f,
+        ""));
 
     return layout;
 }
