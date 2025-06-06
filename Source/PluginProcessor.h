@@ -73,6 +73,7 @@ public:
 
     SimpleMBComp::Fifo<DSP_ORDER> dspOrderFifo;
 
+    // Parameters for Phaser
     struct PhaserParams {
         std::atomic<float>* rateHz = nullptr;
         std::atomic<float>* depthPercent = nullptr;
@@ -82,6 +83,16 @@ public:
     };
 
     PhaserParams phaserParams;
+
+    // Parmeters for Chorus
+    struct ChorusParams {
+        std::atomic<float>* rateHz = nullptr;
+        std::atomic<float>* depthPercent = nullptr;
+        std::atomic<float>* centerDelayMs = nullptr;
+        std::atomic<float>* feedbackPercent = nullptr;
+        std::atomic<float>* mixPercent = nullptr;
+    };
+    ChorusParams chorusParams;
 
 private:
 

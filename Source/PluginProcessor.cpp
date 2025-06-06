@@ -10,11 +10,20 @@
 #include "PluginEditor.h"
 #include <JucePluginDefines.h>
 
+// getters for Phaser parameters
 auto getPhaserRateName() { return juce::String("Phaser RateHz"); }
 auto getPhaserDepthName() { return juce::String("Phaser Depth %"); }
 auto getPhaserCentreFreqName() { return juce::String("Phaser CentreFreqHz"); }
 auto getPhaserFeedbackName() { return juce::String("Phaser Feedback %"); }
 auto getPhaserMixName() { return juce::String("Phaser Mix %"); }
+
+// getters for Chorus parameters
+auto getChorusRateName() { return juce::String("Chorus RateHz"); }
+auto getChorusDepthName() { return juce::String("Chorus Depth %"); }
+auto getChorusCentreDelayName() { return juce::String("Chorus CentreDelayMs"); }
+auto getChorusFeedbackName() { return juce::String("Chorus Feedback %"); }
+auto getChorusMixName() { return juce::String("Chorus Mix %"); }
+
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -40,9 +49,17 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     phaserParams.centerFreqHz = apvts.getRawParameterValue(getPhaserCentreFreqName());
     phaserParams.feedbackPercent = apvts.getRawParameterValue(getPhaserFeedbackName());
     phaserParams.mixPercent   = apvts.getRawParameterValue(getPhaserMixName());
-
     jassert(phaserParams.rateHz && phaserParams.depthPercent && phaserParams.centerFreqHz &&
             phaserParams.feedbackPercent && phaserParams.mixPercent);
+
+    // Set up Chorus parameters
+    chorusParams.rateHz       = apvts.getRawParameterValue(getChorusRateName());
+    chorusParams.depthPercent = apvts.getRawParameterValue(getChorusDepthName());
+    chorusParams.centerDelayMs = apvts.getRawParameterValue(getChorusCentreDelayName());
+    chorusParams.feedbackPercent = apvts.getRawParameterValue(getChorusFeedbackName());
+    chorusParams.mixPercent   = apvts.getRawParameterValue(getChorusMixName());
+    jassert(chorusParams.rateHz && chorusParams.depthPercent && chorusParams.centerDelayMs &&
+            chorusParams.feedbackPercent && chorusParams.mixPercent);
 
 }
 
@@ -206,52 +223,92 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    // Add parameters for Phaser
     const int versionHint = 1;
+    // Add parameters for Phaser
     // Phaser Rate
-    auto rateName = getPhaserRateName();
+    auto phaserRateName = getPhaserRateName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(rateName, versionHint),
-        rateName,
+        juce::ParameterID(phaserRateName, versionHint),
+        phaserRateName,
         juce::NormalisableRange<float>(0.1f, 2.f, 0.01f, 1.0f),
         0.2f,
         "Hz"));
-
     // Phaser Depth
-    auto depthName = getPhaserDepthName();
+    auto phaserDepthName = getPhaserDepthName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(depthName, versionHint),
-        depthName,
+        juce::ParameterID(phaserDepthName, versionHint),
+        phaserDepthName,
         juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
         0.05f,
         "%"));
-
     // Phaser Centre Frequency
-    auto freqName = getPhaserCentreFreqName();
+    auto phaserFreqName = getPhaserCentreFreqName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(freqName, versionHint),
-        freqName,
+        juce::ParameterID(phaserFreqName, versionHint),
+        phaserFreqName,
         juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
         1000.f,
         "Hz"));
-
     // Phaser Feedback
-    auto feedbackName = getPhaserFeedbackName();
+    auto phaserFeedbackName = getPhaserFeedbackName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(feedbackName, versionHint),
-        feedbackName,
+        juce::ParameterID(phaserFeedbackName, versionHint),
+        phaserFeedbackName,
         juce::NormalisableRange<float>(-1.0f, 1.0f, 0.01f, 1.f),
         0.0f,
         "%"));
-
     // Phaser Mix
-    auto mixName = getPhaserMixName();
+    auto phaserMixName = getPhaserMixName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(mixName, versionHint),
-        mixName,
+        juce::ParameterID(phaserMixName, versionHint),
+        phaserMixName,
         juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
         0.05f,
         "%"));
+
+    
+    // Add parameters for Chorus
+    // Chorus Rate
+    auto chorusRateName = getChorusRateName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(chorusRateName, versionHint),
+        chorusRateName,
+        juce::NormalisableRange<float>(0.1f, 5.f, 0.01f, 1.0f),
+        1.5f,
+        "Hz"));
+    // Chorus Depth
+    auto chorusDepthName = getChorusDepthName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(chorusDepthName, versionHint),
+        chorusDepthName,
+        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
+        0.25f,
+        "%"));
+    // Chorus Centre Delay
+    auto chorusCentreDelayName = getChorusCentreDelayName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(chorusCentreDelayName, versionHint),
+        chorusCentreDelayName,
+        juce::NormalisableRange<float>(0.1f, 100.f, 0.1f, 1.f),
+        7.0f,
+        "ms"));
+    // Chorus Feedback
+    auto chorusFeedbackName = getChorusFeedbackName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(chorusFeedbackName, versionHint),
+        chorusFeedbackName,
+        juce::NormalisableRange<float>(-1.0f, 1.0f, 0.01f, 1.f),
+        0.0f,
+        "%"));
+    // Chorus Mix
+    auto chorusMixName = getChorusMixName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID(chorusMixName, versionHint),
+        chorusMixName,
+        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
+        0.5f,
+        "%"));
+
 
     return layout;
 }
