@@ -223,7 +223,7 @@ void AudioPluginAudioProcessor::configureWaveShaper()
 {
     const float saturationValue = *waveShaperParams.saturation;
     // Scale/normalize the saturation value as needed
-    float drive = juce::jlimit(1.0f, 20.0f, saturationValue * 0.2f); // Adjust curve if needed
+    const float drive = juce::jlimit(1.0f, 20.0f, saturationValue * 0.2f); // Adjust curve if needed
 
     // Set the shaping function based on drive
     waveShaper.dsp.functionToUse = [drive](float x)
@@ -531,7 +531,8 @@ bool AudioPluginAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 {
-    return new AudioPluginAudioProcessorEditor(*this);
+    // return new AudioPluginAudioProcessorEditor(*this);
+    return new juce::GenericAudioProcessorEditor(*this); // Use GenericAudioProcessorEditor for simplicity
 }
 
 //==============================================================================
@@ -540,14 +541,28 @@ void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused(destData);
+
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+
+    if (xml != nullptr)
+        copyXmlToBinary(*xml, destData);
 }
 
 void AudioPluginAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused(data, sizeInBytes);
+    // Read the binary data as an XML string
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState != nullptr)
+    {
+        if (xmlState->hasTagName(apvts.state.getType()))
+        {
+            apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
+        }
+    }
 }
 
 //==============================================================================
