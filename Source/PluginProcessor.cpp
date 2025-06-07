@@ -25,8 +25,8 @@ auto getChorusCentreDelayName() { return juce::String("Chorus CentreDelay Ms"); 
 auto getChorusFeedbackName() { return juce::String("Chorus Feedback %"); }
 auto getChorusMixName() { return juce::String("Chorus Mix %"); }
 
-// getters for Overdrive parameters
-auto getOverdriveSaturationName() { return juce::String("Overdrive Saturation"); }
+// getters for WaveShaper parameters
+auto getWaveShaperSaturationName() { return juce::String("WaveShaper Saturation"); }
 
 // getters for Ladder Filter parameters
 auto getLadderFilterCutoffName() { return juce::String("Ladder Filter Cutoff Hz"); }
@@ -59,9 +59,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
 {
     // Initialize DSP order and map instances
-    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::Overdrive, DSP_OPTION::LadderFilter, 
+    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::WaveShaper, DSP_OPTION::LadderFilter, 
                 DSP_OPTION::GeneralFilter};
-    dspInstances = {&phaser, &chorus, &overdrive, &ladderFilter, &generalFilter};
+    dspInstances = {&phaser, &chorus, &waveShaper, &ladderFilter, &generalFilter};
 
     // Set up Phaser parameters
     phaserParams.rateHz       = apvts.getRawParameterValue(getPhaserRateName());
@@ -81,9 +81,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     jassert(chorusParams.rateHz && chorusParams.depthPercent && chorusParams.centerDelayMs &&
             chorusParams.feedbackPercent && chorusParams.mixPercent);
 
-    // Set up Overdrive parameters
-    overdriveParams.overdriveSaturation = apvts.getRawParameterValue(getOverdriveSaturationName());
-    jassert(overdriveParams.overdriveSaturation);
+    // Set up WaveShaper parameters
+    waveShaperParams.saturation = apvts.getRawParameterValue(getWaveShaperSaturationName());
+    jassert(waveShaperParams.saturation);
 
     // Set up Ladder Filter parameters
     ladderFilterParams.cutoffHz = apvts.getRawParameterValue(getLadderFilterCutoffName());
@@ -201,9 +201,87 @@ void AudioPluginAudioProcessor::releaseResources()
     }
 }
 
+void AudioPluginAudioProcessor::configurePhaser()
+{
+    phaser.dsp.setRate(*phaserParams.rateHz);
+    phaser.dsp.setDepth(*phaserParams.depthPercent);
+    phaser.dsp.setCentreFrequency(*phaserParams.centerFreqHz);
+    phaser.dsp.setFeedback(*phaserParams.feedbackPercent);
+    phaser.dsp.setMix(*phaserParams.mixPercent);
+}
+
+void AudioPluginAudioProcessor::configureChorus()
+{
+    chorus.dsp.setRate(*chorusParams.rateHz);
+    chorus.dsp.setDepth(*chorusParams.depthPercent);
+    chorus.dsp.setCentreDelay(*chorusParams.centerDelayMs);
+    chorus.dsp.setFeedback(*chorusParams.feedbackPercent);
+    chorus.dsp.setMix(*chorusParams.mixPercent);
+}
+
+void AudioPluginAudioProcessor::configureWaveShaper()
+{
+    // e.g. if you have something to do
+    // waveShaper.dsp.functionToUse = ...;
+}
+
+void AudioPluginAudioProcessor::configureLadderFilter()
+{
+    ladderFilter.dsp.setCutoffFrequencyHz(*ladderFilterParams.cutoffHz);
+    ladderFilter.dsp.setResonance(*ladderFilterParams.resonance);
+    ladderFilter.dsp.setDrive(*ladderFilterParams.drive);
+    ladderFilter.dsp.setMode(static_cast<juce::dsp::LadderFilter<float>::Mode>(ladderFilterParams.mode->load()));
+}
+
+void AudioPluginAudioProcessor::configureGeneralFilter()
+{
+    auto sampleRate = getSampleRate();
+    int mode = generalFilterParams.mode->load();
+    float freq = generalFilterParams.freqHz->load();
+    float Q = generalFilterParams.quality->load();
+    float gainDb = generalFilterParams.gainDb->load();
+    float gainLinear = juce::Decibels::decibelsToGain(gainDb);
+
+    using Coefficients = juce::dsp::IIR::Coefficients<float>;
+
+    switch (mode)
+    {
+        case 0: // Peak
+            generalFilter.dsp.coefficients = Coefficients::makePeakFilter(sampleRate, freq, Q, gainLinear);
+            break;
+        case 1: // Low Pass
+            generalFilter.dsp.coefficients = Coefficients::makeLowPass(sampleRate, freq, Q);
+            break;
+        case 2: // High Pass
+            generalFilter.dsp.coefficients = Coefficients::makeHighPass(sampleRate, freq, Q);
+            break;
+        case 3: // Band Pass
+            generalFilter.dsp.coefficients = Coefficients::makeBandPass(sampleRate, freq, Q);
+            break;
+        case 4: // Notch
+            generalFilter.dsp.coefficients = Coefficients::makeNotch(sampleRate, freq, Q);
+            break;
+        case 5: // All Pass
+            generalFilter.dsp.coefficients = Coefficients::makeAllPass(sampleRate, freq, Q);
+            break;
+        default: // fallback
+            generalFilter.dsp.coefficients = Coefficients::makePeakFilter(sampleRate, freq, Q, gainLinear);
+            break;
+    }
+
+}
+
 void AudioPluginAudioProcessor::configureDSPModules()
 {
-    
+    // Configure each DSP module with its parameters
+    configurePhaser();
+    configureChorus();
+    configureWaveShaper();
+    configureLadderFilter();
+    configureGeneralFilter();
+
+    // Notify that the DSP order has changed
+    dspOrderFifo.push(dspOrder);
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -322,15 +400,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         "%"));
 
 
-    // Add parameters for Overdrive
-    auto overdriveSaturationName = getOverdriveSaturationName();
+    // Add parameters for WaveShaper
+    auto waveShaperSaturationName = getWaveShaperSaturationName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(overdriveSaturationName, versionHint),
-        overdriveSaturationName,
+        juce::ParameterID(waveShaperSaturationName, versionHint),
+        waveShaperSaturationName,
         juce::NormalisableRange<float>(1.f, 100.0f, 0.1f, 1.f),
         1.f,
         ""));
-
 
     // Add parameters for Ladder Filter
     // Ladder Filter Cutoff

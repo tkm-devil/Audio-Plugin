@@ -59,7 +59,7 @@ public:
     {
         Phase,
         Chorus,
-        Overdrive,
+        WaveShaper,
         LadderFilter,
         GeneralFilter,
         END_OF_LIST
@@ -94,11 +94,12 @@ public:
     };
     ChorusParams chorusParams;
 
-    // Parameters for Overdrive
-    struct OverdriveParams{
-        std::atomic<float>* overdriveSaturation = nullptr;
+    // Parameters for Wave Shaper
+    struct WaveShaperParams {
+        std::atomic<float>* saturation = nullptr;
     };
-    OverdriveParams overdriveParams;
+    WaveShaperParams waveShaperParams;
+
 
     // Parameters for Ladder Filter
     struct LadderFilterParams {
@@ -120,6 +121,11 @@ public:
     GeneralFilterParams generalFilterParams;
 
 private:
+    void configurePhaser();
+    void configureChorus();
+    void configureWaveShaper();
+    void configureLadderFilter();
+    void configureGeneralFilter();
 
     // DSP chain configuration
     DSP_ORDER dspOrder;
@@ -150,7 +156,7 @@ private:
     // DSP module instances
     DSP_CHOICE<juce::dsp::Phaser<float>> phaser;
     DSP_CHOICE<juce::dsp::Chorus<float>> chorus;
-    DSP_CHOICE<juce::dsp::LadderFilter<float>> overdrive;
+    DSP_CHOICE<juce::dsp::WaveShaper<float>> waveShaper;
     DSP_CHOICE<juce::dsp::LadderFilter<float>> ladderFilter;
     DSP_CHOICE<juce::dsp::IIR::Filter<float>> generalFilter;
 
