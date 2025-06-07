@@ -221,8 +221,15 @@ void AudioPluginAudioProcessor::configureChorus()
 
 void AudioPluginAudioProcessor::configureWaveShaper()
 {
-    // e.g. if you have something to do
-    // waveShaper.dsp.functionToUse = ...;
+    const float saturationValue = *waveShaperParams.saturation;
+    // Scale/normalize the saturation value as needed
+    float drive = juce::jlimit(1.0f, 20.0f, saturationValue * 0.2f); // Adjust curve if needed
+
+    // Set the shaping function based on drive
+    waveShaper.dsp.functionToUse = [drive](float x)
+    {
+        return std::tanh(drive * x);
+    };
 }
 
 void AudioPluginAudioProcessor::configureLadderFilter()

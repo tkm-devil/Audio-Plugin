@@ -156,7 +156,7 @@ private:
     // DSP module instances
     DSP_CHOICE<juce::dsp::Phaser<float>> phaser;
     DSP_CHOICE<juce::dsp::Chorus<float>> chorus;
-    DSP_CHOICE<juce::dsp::WaveShaper<float>> waveShaper;
+    DSP_CHOICE<juce::dsp::WaveShaper<float, std::function<float(float)>>> waveShaper;
     DSP_CHOICE<juce::dsp::LadderFilter<float>> ladderFilter;
     DSP_CHOICE<juce::dsp::IIR::Filter<float>> generalFilter;
 
