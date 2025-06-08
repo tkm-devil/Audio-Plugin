@@ -35,14 +35,14 @@ auto getLadderFilterDriveName() { return juce::String("Ladder Filter Drive"); }
 auto getLadderFilterModeName() { return juce::String("Ladder Filter Mode"); }
 
 // getters for General Filter parameters
-auto getGeneralFilterChoices(){
+auto getGeneralFilterChoices()
+{
     return juce::StringArray{"Peak", "Low Pass", "High Pass", "Band Pass", "Notch", "All Pass"};
 }
 auto getGeneralFilterModeName() { return juce::String("General Filter Mode"); }
 auto getGeneralFilterFreqName() { return juce::String("General Filter Frequency Hz"); }
 auto getGeneralFilterQualityName() { return juce::String("General Filter Quality"); }
 auto getGeneralFilterGainName() { return juce::String("General Filter Gain dB"); }
-
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -59,25 +59,25 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
 {
     // Initialize DSP order and map instances
-    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::WaveShaper, DSP_OPTION::LadderFilter, 
+    dspOrder = {DSP_OPTION::Phase, DSP_OPTION::Chorus, DSP_OPTION::WaveShaper, DSP_OPTION::LadderFilter,
                 DSP_OPTION::GeneralFilter};
     dspInstances = {&phaser, &chorus, &waveShaper, &ladderFilter, &generalFilter};
 
     // Set up Phaser parameters
-    phaserParams.rateHz       = apvts.getRawParameterValue(getPhaserRateName());
+    phaserParams.rateHz = apvts.getRawParameterValue(getPhaserRateName());
     phaserParams.depthPercent = apvts.getRawParameterValue(getPhaserDepthName());
     phaserParams.centerFreqHz = apvts.getRawParameterValue(getPhaserCentreFreqName());
     phaserParams.feedbackPercent = apvts.getRawParameterValue(getPhaserFeedbackName());
-    phaserParams.mixPercent   = apvts.getRawParameterValue(getPhaserMixName());
+    phaserParams.mixPercent = apvts.getRawParameterValue(getPhaserMixName());
     jassert(phaserParams.rateHz && phaserParams.depthPercent && phaserParams.centerFreqHz &&
             phaserParams.feedbackPercent && phaserParams.mixPercent);
 
     // Set up Chorus parameters
-    chorusParams.rateHz       = apvts.getRawParameterValue(getChorusRateName());
+    chorusParams.rateHz = apvts.getRawParameterValue(getChorusRateName());
     chorusParams.depthPercent = apvts.getRawParameterValue(getChorusDepthName());
     chorusParams.centerDelayMs = apvts.getRawParameterValue(getChorusCentreDelayName());
     chorusParams.feedbackPercent = apvts.getRawParameterValue(getChorusFeedbackName());
-    chorusParams.mixPercent   = apvts.getRawParameterValue(getChorusMixName());
+    chorusParams.mixPercent = apvts.getRawParameterValue(getChorusMixName());
     jassert(chorusParams.rateHz && chorusParams.depthPercent && chorusParams.centerDelayMs &&
             chorusParams.feedbackPercent && chorusParams.mixPercent);
 
@@ -89,18 +89,17 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     ladderFilterParams.cutoffHz = apvts.getRawParameterValue(getLadderFilterCutoffName());
     ladderFilterParams.resonance = apvts.getRawParameterValue(getLadderFilterResonanceName());
     ladderFilterParams.drive = apvts.getRawParameterValue(getLadderFilterDriveName());
-    ladderFilterParams.mode = reinterpret_cast<std::atomic<int>*>(apvts.getRawParameterValue(getLadderFilterModeName()));
+    ladderFilterParams.mode = reinterpret_cast<std::atomic<int> *>(apvts.getRawParameterValue(getLadderFilterModeName()));
     jassert(ladderFilterParams.cutoffHz && ladderFilterParams.resonance &&
             ladderFilterParams.drive && ladderFilterParams.mode);
 
     // Set up General Filter parameters
-    generalFilterParams.mode = reinterpret_cast<std::atomic<int>*>(apvts.getRawParameterValue(getGeneralFilterModeName()));
+    generalFilterParams.mode = reinterpret_cast<std::atomic<int> *>(apvts.getRawParameterValue(getGeneralFilterModeName()));
     generalFilterParams.freqHz = apvts.getRawParameterValue(getGeneralFilterFreqName());
     generalFilterParams.quality = apvts.getRawParameterValue(getGeneralFilterQualityName());
     generalFilterParams.gainDb = apvts.getRawParameterValue(getGeneralFilterGainName());
     jassert(generalFilterParams.mode && generalFilterParams.freqHz &&
             generalFilterParams.quality && generalFilterParams.gainDb);
-
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -253,29 +252,28 @@ void AudioPluginAudioProcessor::configureGeneralFilter()
 
     switch (mode)
     {
-        case 0: // Peak
-            generalFilter.dsp.coefficients = Coefficients::makePeakFilter(sampleRate, freq, Q, gainLinear);
-            break;
-        case 1: // Low Pass
-            generalFilter.dsp.coefficients = Coefficients::makeLowPass(sampleRate, freq, Q);
-            break;
-        case 2: // High Pass
-            generalFilter.dsp.coefficients = Coefficients::makeHighPass(sampleRate, freq, Q);
-            break;
-        case 3: // Band Pass
-            generalFilter.dsp.coefficients = Coefficients::makeBandPass(sampleRate, freq, Q);
-            break;
-        case 4: // Notch
-            generalFilter.dsp.coefficients = Coefficients::makeNotch(sampleRate, freq, Q);
-            break;
-        case 5: // All Pass
-            generalFilter.dsp.coefficients = Coefficients::makeAllPass(sampleRate, freq, Q);
-            break;
-        default: // fallback
-            generalFilter.dsp.coefficients = Coefficients::makePeakFilter(sampleRate, freq, Q, gainLinear);
-            break;
+    case 0: // Peak
+        generalFilter.dsp.coefficients = Coefficients::makePeakFilter(sampleRate, freq, Q, gainLinear);
+        break;
+    case 1: // Low Pass
+        generalFilter.dsp.coefficients = Coefficients::makeLowPass(sampleRate, freq, Q);
+        break;
+    case 2: // High Pass
+        generalFilter.dsp.coefficients = Coefficients::makeHighPass(sampleRate, freq, Q);
+        break;
+    case 3: // Band Pass
+        generalFilter.dsp.coefficients = Coefficients::makeBandPass(sampleRate, freq, Q);
+        break;
+    case 4: // Notch
+        generalFilter.dsp.coefficients = Coefficients::makeNotch(sampleRate, freq, Q);
+        break;
+    case 5: // All Pass
+        generalFilter.dsp.coefficients = Coefficients::makeAllPass(sampleRate, freq, Q);
+        break;
+    default: // fallback
+        generalFilter.dsp.coefficients = Coefficients::makePeakFilter(sampleRate, freq, Q, gainLinear);
+        break;
     }
-
 }
 
 void AudioPluginAudioProcessor::configureDSPModules()
@@ -363,7 +361,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         0.05f,
         "%"));
 
-    
     // Add parameters for Chorus
     // Chorus Rate
     auto chorusRateName = getChorusRateName();
@@ -405,7 +402,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
         0.05f,
         "%"));
-
 
     // Add parameters for WaveShaper
     auto waveShaperSaturationName = getWaveShaperSaturationName();
@@ -449,7 +445,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::StringArray{"LPF12", "HPF12", "BPF12", "LPF24", "HPF24", "BPF24"},
         0)); // Default to LPF12
 
-
     // General Filter: https://docs.juce.com/develop/structdsp_1_1IIR_1_1Coefficients.html
     // Add parameters for General Filter
     auto generalFilterModeName = getGeneralFilterModeName();
@@ -482,7 +477,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::NormalisableRange<float>(-24.f, 24.f, 0.1f, 1.f),
         0.f,
         "dB"));
-
 
     return layout;
 }
@@ -531,19 +525,79 @@ bool AudioPluginAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 {
-    // return new AudioPluginAudioProcessorEditor(*this);
-    return new juce::GenericAudioProcessorEditor(*this); // Use GenericAudioProcessorEditor for simplicity
+    return new AudioPluginAudioProcessorEditor(*this);
+    // return new juce::GenericAudioProcessorEditor(*this); // Use GenericAudioProcessorEditor for simplicity
 }
+
+template <>
+struct juce::VariantConverter<AudioPluginAudioProcessor::DSP_ORDER>
+{
+    static AudioPluginAudioProcessor::DSP_ORDER fromVar(const juce::var &v)
+    {
+        AudioPluginAudioProcessor::DSP_ORDER order;
+        juce::String orderString = v.toString();
+
+        if (orderString.isNotEmpty())
+        {
+            juce::StringArray tokens = juce::StringArray::fromTokens(orderString, ",", "");
+
+            for (size_t i = 0; i < order.size() && i < static_cast<size_t>(tokens.size()); ++i)
+            {
+                int enumValue = tokens[static_cast<int>(i)].getIntValue();
+
+                if (enumValue >= 0 && enumValue < static_cast<int>(AudioPluginAudioProcessor::DSP_OPTION::END_OF_LIST))
+                {
+                    order[i] = static_cast<AudioPluginAudioProcessor::DSP_OPTION>(enumValue);
+                }
+                else
+                {
+                    order[i] = static_cast<AudioPluginAudioProcessor::DSP_OPTION>(i);
+                }
+            }
+        }
+        else
+        {
+            // Default order
+            for (size_t i = 0; i < order.size(); ++i)
+            {
+                order[i] = static_cast<AudioPluginAudioProcessor::DSP_OPTION>(i);
+            }
+        }
+
+        return order;
+    }
+
+    static juce::var toVar(const AudioPluginAudioProcessor::DSP_ORDER &order)
+    {
+        juce::String result;
+
+        for (size_t i = 0; i < order.size(); ++i)
+        {
+            if (i > 0)
+                result += ",";
+            result += juce::String(static_cast<int>(order[i]));
+        }
+
+        return result;
+    }
+};
 
 //==============================================================================
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-
+    // Copy the current state from the APVTS
     auto state = apvts.copyState();
+
+    // Serialize DSP order using VariantConverter
+    auto dspOrderVar = juce::VariantConverter<DSP_ORDER>::toVar(dspOrder);
+    state.setProperty("dspOrder", dspOrderVar, nullptr);
+
+    // Convert to XML and store it
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+
+    // Optionally write the XML to a file for debugging purposes
+    // xml->writeToFile(juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
+    //              .getChildFile("PluginStateDump.xml"), {});
 
     if (xml != nullptr)
         copyXmlToBinary(*xml, destData);
@@ -551,16 +605,25 @@ void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 
 void AudioPluginAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    // Read the binary data as an XML string
+    // Load the XML from the binary block
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
-    if (xmlState != nullptr)
+    if (xmlState != nullptr && xmlState->hasTagName(apvts.state.getType()))
     {
-        if (xmlState->hasTagName(apvts.state.getType()))
+        // Convert XML back into a ValueTree
+        juce::ValueTree tree = juce::ValueTree::fromXml(*xmlState);
+
+        if (tree.isValid())
         {
-            apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
+            // Extract DSP order if present
+            if (tree.hasProperty("dspOrder"))
+            {
+                DSP_ORDER restoredOrder = juce::VariantConverter<DSP_ORDER>::fromVar(tree.getProperty("dspOrder"));
+                dspOrderFifo.push(restoredOrder); // Apply restored DSP order
+            }
+
+            // Apply the parameter state
+            apvts.replaceState(tree);
         }
     }
 }

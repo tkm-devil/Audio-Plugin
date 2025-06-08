@@ -71,6 +71,9 @@ public:
     using DSP_ORDER = std::array<DSP_OPTION, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
     using DSP_POINTERS = std::array<juce::dsp::ProcessorBase*, static_cast<size_t>(DSP_OPTION::END_OF_LIST)>;
 
+    const DSP_ORDER& getDSPOrder() const { return dspOrder; }
+
+
     SimpleMBComp::Fifo<DSP_ORDER> dspOrderFifo;
 
     // Parameters for Phaser
