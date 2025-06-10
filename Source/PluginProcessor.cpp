@@ -20,7 +20,7 @@ auto getPhaserMixName() { return juce::String("Phaser Mix %"); }
 auto getPhaserBypassName() { return juce::String("Phaser Bypass"); }
 
 // getters for Chorus parameters
-auto getChorusRateName() { return juce::String("Chorus RateHz"); }
+auto getChorusRateName() { return juce::String("Chorus Rate Hz"); }
 auto getChorusDepthName() { return juce::String("Chorus Depth %"); }
 auto getChorusCentreDelayName() { return juce::String("Chorus CentreDelay Ms"); }
 auto getChorusFeedbackName() { return juce::String("Chorus Feedback %"); }
@@ -335,16 +335,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(phaserRateName, versionHint),
         phaserRateName,
-        juce::NormalisableRange<float>(0.1f, 2.f, 0.01f, 1.0f),
-        0.2f,
+        juce::NormalisableRange<float>(0.1f, 10.f, 0.01f, 1.0f),
+        0.5f,
         "Hz"));
     // Phaser Depth
     auto phaserDepthName = getPhaserDepthName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(phaserDepthName, versionHint),
         phaserDepthName,
-        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
-        0.05f,
+        juce::NormalisableRange<float>(0.f, 1.0f, 0.01f, 1.f),
+        0.25f,
         "%"));
     // Phaser Centre Frequency
     auto phaserFreqName = getPhaserCentreFreqName();
@@ -367,8 +367,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(phaserMixName, versionHint),
         phaserMixName,
-        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
-        0.05f,
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f, 1.f),
+        0.3f,
         "%"));
     // Phaser Bypass
     auto phaserBypassName = getPhaserBypassName();
@@ -384,15 +384,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::ParameterID(chorusRateName, versionHint),
         chorusRateName,
         juce::NormalisableRange<float>(0.1f, 5.f, 0.01f, 1.0f),
-        1.5f,
+        0.8f,
         "Hz"));
     // Chorus Depth
     auto chorusDepthName = getChorusDepthName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(chorusDepthName, versionHint),
         chorusDepthName,
-        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
-        0.05f,
+        juce::NormalisableRange<float>(0.f, 1.0f, 0.01f, 1.f),
+        0.2f,
         "%"));
     // Chorus Centre Delay
     auto chorusCentreDelayName = getChorusCentreDelayName();
@@ -415,8 +415,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(chorusMixName, versionHint),
         chorusMixName,
-        juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 1.f),
-        0.05f,
+        juce::NormalisableRange<float>(0.f, 1.0f, 0.01f, 1.f),
+        0.4f,
         "%"));
     // Chorus Bypass
     auto chorusBypassName = getChorusBypassName();
@@ -447,7 +447,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::ParameterID(ladderFilterCutoffName, versionHint),
         ladderFilterCutoffName,
         juce::NormalisableRange<float>(20.f, 20000.f, 0.1f, 1.f),
-        20000.f,
+        8000.f,
         "Hz"));
     // Ladder Filter Resonance
     auto ladderFilterResonanceName = getLadderFilterResonanceName();
@@ -455,7 +455,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         juce::ParameterID(ladderFilterResonanceName, versionHint),
         ladderFilterResonanceName,
         juce::NormalisableRange<float>(0.f, 1.f, 0.01f, 1.f),
-        0.f,
+        0.1f,
         ""));
     // Ladder Filter Drive
     auto ladderFilterDriveName = getLadderFilterDriveName();
@@ -544,6 +544,8 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     auto audioBlock = juce::dsp::AudioBlock<float>(buffer);
     auto context = juce::dsp::ProcessContextReplacing<float>(audioBlock);
 
+    configureDSPModules(); // Ensure DSP modules are configured with current parameters
+
     // Process through DSP chain in specified order
     for (size_t i = 0; i < dspOrder.size(); ++i)
     {
@@ -592,8 +594,8 @@ bool AudioPluginAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 {
-    return new AudioPluginAudioProcessorEditor(*this);
-    // return new juce::GenericAudioProcessorEditor(*this); // Use GenericAudioProcessorEditor for simplicity
+    // return new AudioPluginAudioProcessorEditor(*this);
+    return new juce::GenericAudioProcessorEditor(*this); // Use GenericAudioProcessorEditor for simplicity
 }
 
 template <>
