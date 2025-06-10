@@ -83,6 +83,7 @@ public:
         std::atomic<float>* centerFreqHz = nullptr;
         std::atomic<float>* feedbackPercent = nullptr;
         std::atomic<float>* mixPercent = nullptr;
+        std::atomic<bool>* bypass = nullptr;
     };
 
     PhaserParams phaserParams;
@@ -94,12 +95,14 @@ public:
         std::atomic<float>* centerDelayMs = nullptr;
         std::atomic<float>* feedbackPercent = nullptr;
         std::atomic<float>* mixPercent = nullptr;
+        std::atomic<bool>* bypass = nullptr;
     };
     ChorusParams chorusParams;
 
     // Parameters for Wave Shaper
     struct WaveShaperParams {
         std::atomic<float>* saturation = nullptr;
+        std::atomic<bool>* bypass = nullptr;
     };
     WaveShaperParams waveShaperParams;
 
@@ -110,6 +113,7 @@ public:
         std::atomic<float>* resonance = nullptr;
         std::atomic<float>* drive = nullptr;
         std::atomic<int>* mode = nullptr; // Mode is enum-backed, so int works
+        std::atomic<bool>* bypass = nullptr;
     };
 
     LadderFilterParams ladderFilterParams;
@@ -120,6 +124,7 @@ public:
         std::atomic<float>* freqHz = nullptr;
         std::atomic<float>* quality = nullptr;
         std::atomic<float>* gainDb = nullptr;
+        std::atomic<bool>* bypass = nullptr;
     };
     GeneralFilterParams generalFilterParams;
 
