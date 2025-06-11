@@ -55,12 +55,16 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
 #if !JucePlugin_IsMidiEffect
 #if !JucePlugin_IsSynth
+                         .withInput("Input", juce::AudioChannelSet::mono(), true)
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
 #endif
+                         .withOutput("Output", juce::AudioChannelSet::mono(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
                          ),
       apvts(*this, nullptr, "Parameters", createParameterLayout())
+#else
+    : apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
     // Initialize DSP order and map instances
